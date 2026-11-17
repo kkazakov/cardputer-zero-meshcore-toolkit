@@ -42,6 +42,7 @@ constexpr uint32_t kLongPressMs = 700;
 #if !USE_DESKTOP
 struct EvdevKeypad {
     int fd{-1};
+    bool shift_down{false};
     lv_indev_state_t state{LV_INDEV_STATE_RELEASED};
     uint32_t key{0};
     bool router_event_pending{false};
@@ -335,10 +336,23 @@ void evdev_read_cb(lv_indev_t* indev, lv_indev_data_t* data) {
             continue;
         }
 
-        const auto key = map_evdev_key(input.code);
-        if (!key || input.value == 2) {
+        // Shift is a modifier, not a key the UI should see; remember it so the
+        // next letter arrives in upper case.
+        if (input.code == KEY_LEFTSHIFT || input.code == KEY_RIGHTSHIFT) {
+            keypad->shift_down = input.value != 0;
+            data->continue_reading = true;
             continue;
         }
+
+        const auto mapped = map_evdev_key(input.code);
+        if (!mapped || input.value == 2) {
+            continue;
+        }
+
+        const uint32_t key =
+            (keypad->shift_down && mapped >= 'a' && mapped <= 'z')
+                ? static_cast<uint32_t>(mapped - 'a' + 'A')
+                : mapped;
 
         keypad->key = key;
         keypad->state = input.value ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;

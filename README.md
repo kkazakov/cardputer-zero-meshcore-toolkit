@@ -4,23 +4,22 @@ A LoRa mesh health analyzer for the M5Stack CardputerZero (aarch64 Linux,
 320×170). It configures your MeshCore node and radio, verifies the LoRa hat at
 startup, and will analyze the health of nearby mesh nodes.
 
-The main screen is a sliding card carousel — Settings, Test 1, Test 2 — ported
-from the [CardputerZero mouse emulator](https://github.com/CardputerZero/cardputer-zero-mouse-emu)
-layout, so the two apps look like siblings on the device.
+The main screen is a sliding card carousel — Settings, Test 1, Test 2 — with a
+mint accent card flanked by side cards and a dot indicator.
 
 | Main menu | Settings | Editing a value | Typing the node name |
 | --- | --- | --- | --- |
 | ![Main menu](screenshot/app-home.png) | ![Settings](screenshot/app-settings.png) | ![Editing](screenshot/app-settings-edit.png) | ![Name editor](screenshot/app-name-edit.png) |
 
 *Captured on the device with the app's own screenshot key (320×170).*
-*The app starts in the dark palette shared with Mouse Jiggler; `6` switches to light.*
+*The app starts dark; `6` switches to a light theme.*
 
 ## Features
 
 - **Sliding menu** — a three-card carousel with a dot indicator; Z/C move the
   selection, OK opens it.
-- **Dark by default** — the navy/mint palette from the sibling Mouse Jiggler app;
-  `6` toggles a light theme.
+- **Dark by default** — a deep navy canvas with panel and card tiers and a mint
+  accent; `6` toggles a light theme.
 - **Settings** — configure every primary MeshCore radio option:
   node name, region (with presets), frequency, spreading factor, bandwidth,
   coding rate, TX power, sync word, and preamble. Up/Down pick a field, OK opens
@@ -85,7 +84,7 @@ Settings are saved to `meshcore-toolkit.conf`:
 
 ```ini
 [application]
-dark_mode=no
+dark_mode=yes
 
 [mesh]
 node_name=MeshToolkit
@@ -143,28 +142,21 @@ config at `/etc/meshcore-toolkit.conf`.
   rail down the SX1262 still answers nothing over SPI — every read returns
   `0x00`, which looks exactly like a missing hat. The probe therefore sets
   `/sys/class/leds/ext_5v_out/brightness` to `1`, waits 150 ms for the rail to
-  settle (the same delay M5Stack's own LoRa app uses), and only then reads the
-  SX1262 `GetStatus` byte. Verified on hardware: hat detected on
-  `/dev/spidev0.1`.
+  settle, and only then reads the SX1262 `GetStatus` byte. Verified on hardware:
+  hat detected on `/dev/spidev0.1`.
 - **The rail node is `root:gpio` mode `0664`**, so the app needs `gpio` group
   membership to power the hat. When it cannot be written, the error screen says
   so (`cannot enable EXT 5V`).
-- **Not yet implemented:** the hat's RESET/BUSY lines live behind a
-  `PI4IOE5V6408` I²C expander (`/dev/i2c-1`) in M5Stack's driver, with a direct
-  GPIO fallback. The probe currently relies on the radio already being in
-  standby; driving reset explicitly is needed before real TX/RX.
+- **Not yet implemented:** the hat's RESET/BUSY lines sit behind a
+  `PI4IOE5V6408` I²C expander (`/dev/i2c-1`), with a direct GPIO fallback. The
+  probe relies on the radio already being in standby; driving reset explicitly is
+  needed before real TX/RX.
 - **On the development unit** no expander answered on any I²C bus, yet the SPI
   status read is valid once the rail is up — so the reset line is either
   strapped high or held externally.
-- **MeshCore integration is config-first.** The radio settings mirror MeshCore's
-  `lora` namespace and NodePrefs; the on-air protocol/routing driver is the next
-  milestone.
-
-## Credits
-
-- UI carousel language and layout metrics, main-screen layout: [Ultimate-Remote](https://github.com/geo-tp/Ultimate-Remote) (MIT)
-- Radio configuration model: [MeshCore](https://github.com/meshcore-dev/MeshCore) (MIT)
-- LoRa hat: [M5Stack Cap LoRa-1262](https://docs.m5stack.com/en/cap/Cap_LoRa-1262)
+- **MeshCore integration is config-first.** The radio settings mirror the
+  `lora` namespace and node preferences of MeshCore; the on-air protocol and
+  routing driver is the next milestone.
 
 ## License
 
