@@ -23,6 +23,7 @@ set(APP_ASSETS_ROOT "" CACHE PATH "Optional runtime assets root. Expected subdir
 set(APP_CONFIG_FILE "" CACHE FILEPATH "Application config file; defaults to the repository file on desktop and /etc/meshcore-toolkit.conf on device")
 set(APP_KEY_INPUT_DEVICE "" CACHE STRING "Optional Linux evdev keyboard/keypad device path, e.g. /dev/input/event0")
 set(APP_LORA_SPI_DEVICE "" CACHE STRING "Optional LoRa hat SPI device path, e.g. /dev/spidev0.0; empty auto-detects")
+set(APP_LORA_POWER_PATH "/sys/class/leds/ext_5v_out/brightness" CACHE STRING "EXT 5V rail sysfs node that powers the LoRa hat")
 set(APP_FRAMEBUFFER_DEVICE "/dev/fb0" CACHE STRING "Linux framebuffer device path used by embedded builds")
 set(APP_DRM_DEVICE "/dev/dri/card0" CACHE STRING "Linux DRM device path used when APP_USE_DRM=ON")
 set(APP_DRM_CONNECTOR_ID "-1" CACHE STRING "DRM connector id used when APP_USE_DRM=ON; -1 auto-selects")
@@ -420,6 +421,7 @@ target_compile_definitions(${PROJECT_NAME}_platform
     PUBLIC
         APP_KEY_INPUT_DEVICE="${APP_KEY_INPUT_DEVICE}"
         APP_LORA_SPI_DEVICE="${APP_LORA_SPI_DEVICE}"
+        APP_LORA_POWER_PATH="${APP_LORA_POWER_PATH}"
         APP_FRAMEBUFFER_DEVICE="${APP_FRAMEBUFFER_DEVICE}"
         APP_DRM_DEVICE="${APP_DRM_DEVICE}"
         APP_DRM_CONNECTOR_ID=${APP_DRM_CONNECTOR_ID}

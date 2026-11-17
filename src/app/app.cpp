@@ -430,6 +430,7 @@ int Application::run() {
     }
 
     persist_config(persistence);
+    platform::release_lora_hat();
 
     if (quit_observer) {
         lv_observer_remove(quit_observer);

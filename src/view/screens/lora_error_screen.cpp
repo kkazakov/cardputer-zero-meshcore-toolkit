@@ -48,7 +48,7 @@ void LoraErrorScreen::build_content(lv_obj_t* content) {
     reactive::bind_theme(error_label_, view_model().dark_mode_subject(), reactive::ThemeRole::Text);
 
     auto* hint = lv_label_create(group);
-    lv_label_set_text(hint, "Check the SPI hat is attached, then retry");
+    lv_label_set_text(hint, "Check the hat is seated and powered, then retry");
     const lv_font_t* hint_font = assets().load_standard_font(11, app::StandardFontWeight::Regular);
     lv_obj_set_style_text_font(hint, hint_font ? hint_font : &lv_font_montserrat_12, 0);
     reactive::bind_theme(hint, view_model().dark_mode_subject(), reactive::ThemeRole::Text);

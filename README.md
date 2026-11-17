@@ -23,8 +23,8 @@ layout, so the two apps look like siblings on the device.
   coding rate, TX power, sync word, and preamble.
 - **Regions** — Europe, USA/Canada, Australia, New Zealand, EU 433, and a Custom
   mode for manual frequency plans.
-- **LoRa hat check** — probes the SX1262 hat on the SPI bus at startup and shows
-  an error screen if it is not responding.
+- **LoRa hat check** — powers the hat's EXT 5V rail, probes the SX1262 on the SPI
+  bus at startup, and shows an error screen if it is not responding.
 
 ## Requirements
 
@@ -128,17 +128,23 @@ config at `/etc/meshcore-toolkit.conf`.
 - **First version.** The sliding menu, Settings editor (all primary MeshCore
   options), region presets, LoRa-hat startup check, icon, and packaging are in
   place; Test 1 / Test 2 are placeholders for the mesh-health views.
-- **LoRa probe is best-effort.** It enumerates `/dev/spidev*` and reads the
-  SX1262 `GetStatus` byte (`0x00` means nothing is driving MISO).
-- **The hat is more than a bare SPI device.** M5Stack's own
-  `/usr/share/Cap-LoRa-1262/bin/Cap-LoRa-1262` drives RESET/BUSY through a
-  `PI4IOE5V6408` I²C expander (falling back to direct GPIO). Reading `GetStatus`
-  without that bring-up sequence can fail even with the hat seated, so the next
-  step is to implement the expander/GPIO sequence instead of relying on the raw
-  read.
-- **On the development unit** no expander answered on any I²C bus and
-  `/dev/spidev0.1` read `0x00`, so the app currently lands on the "LoRa hat not
-  working" screen; `ESC` continues into the UI in degraded mode (`OK` retries).
+- **The hat is powered from the EXT 5V rail, which is off by default.** With the
+  rail down the SX1262 still answers nothing over SPI — every read returns
+  `0x00`, which looks exactly like a missing hat. The probe therefore sets
+  `/sys/class/leds/ext_5v_out/brightness` to `1`, waits 150 ms for the rail to
+  settle (the same delay M5Stack's own LoRa app uses), and only then reads the
+  SX1262 `GetStatus` byte. Verified on hardware: hat detected on
+  `/dev/spidev0.1`.
+- **The rail node is `root:gpio` mode `0664`**, so the app needs `gpio` group
+  membership to power the hat. When it cannot be written, the error screen says
+  so (`cannot enable EXT 5V`).
+- **Not yet implemented:** the hat's RESET/BUSY lines live behind a
+  `PI4IOE5V6408` I²C expander (`/dev/i2c-1`) in M5Stack's driver, with a direct
+  GPIO fallback. The probe currently relies on the radio already being in
+  standby; driving reset explicitly is needed before real TX/RX.
+- **On the development unit** no expander answered on any I²C bus, yet the SPI
+  status read is valid once the rail is up — so the reset line is either
+  strapped high or held externally.
 - **MeshCore integration is config-first.** The radio settings mirror MeshCore's
   `lora` namespace and NodePrefs; the on-air protocol/routing driver is the next
   milestone.

@@ -17,9 +17,16 @@ struct LoRaHatStatus {
     std::string device;
 };
 
-// Probes for the CardputerZero LoRa hat (SX1262 on the SPI bus). On desktop
-// builds this returns a clearly-simulated "working" result so the UI can be
-// exercised; on the device it opens a spidev node and reads the SX1262 status.
+// Probes for the CardputerZero LoRa hat (SX1262 on the SPI bus).
+//
+// The hat is powered from the EXT 5V rail, which is off by default: the
+// SX1262 stays silent (MISO reads 0x00) until that rail is enabled. The probe
+// therefore powers the rail, waits for it to settle, and then reads the SX1262
+// status byte. On desktop builds this returns a clearly-simulated result.
 LoRaHatStatus probe_lora_hat();
+
+// Restores the EXT 5V rail to the value it had before probe_lora_hat().
+// Call on shutdown so the port is not left powered.
+void release_lora_hat();
 
 } // namespace platform
