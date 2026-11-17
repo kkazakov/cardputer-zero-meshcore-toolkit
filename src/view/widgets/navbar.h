@@ -43,6 +43,8 @@ private:
     std::array<lv_obj_t*, 3> hint_keys_{};
     std::array<lv_obj_t*, 3> hint_actions_{};
     std::unique_ptr<IconButton> theme_button_;
+    lv_obj_t* theme_group_{nullptr};
+    lv_obj_t* theme_key_label_{nullptr};
     lv_observer_t* page_observer_{nullptr};
     lv_observer_t* theme_observer_{nullptr};
 };

@@ -11,6 +11,11 @@ mint accent card flanked by side cards and a dot indicator.
 | --- | --- | --- | --- |
 | ![Main menu](screenshot/app-home.png) | ![Settings](screenshot/app-settings.png) | ![Editing](screenshot/app-settings-edit.png) | ![Name editor](screenshot/app-name-edit.png) |
 
+The light theme is one keypress away, and the `6` chip in the bottom bar shows
+which key does it:
+
+![Light theme](screenshot/app-home-light.png)
+
 *Captured on the device with the app's own screenshot key (320×170).*
 *The app starts dark; `6` switches to a light theme.*
 
@@ -52,7 +57,7 @@ plain letters instead — no `FN` chord is ever needed.
 | `OK` / `Enter` | open the selected card, start editing the focused field, then save |
 | any letter / digit / space / `-` `.` | type into the node name while it is being edited |
 | `ESC` | cancel an edit, go back, or exit from the main screen |
-| `6` | light / dark theme |
+| `6` | light / dark theme (labelled next to the moon/sun icon in the bottom bar) |
 | `PRSC` | save a screenshot |
 | `HELP` | keyboard help overlay |
 

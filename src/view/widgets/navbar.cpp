@@ -108,10 +108,24 @@ void NavBar::build() {
         reactive::bind_theme(hint_actions_[i], view_model_.dark_mode_subject(), reactive::ThemeRole::Text);
     }
 
+    // The theme toggle gets its own key chip so it is not mistaken for the
+    // last of the numbered nav buttons.
+    theme_group_ = lv_obj_create(core_obj_);
+    lv_obj_remove_style_all(theme_group_);
+    lv_obj_set_size(theme_group_, LV_SIZE_CONTENT, LV_PCT(100));
+    lv_obj_set_flex_flow(theme_group_, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(theme_group_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(theme_group_, 2, 0);
+    lv_obj_clear_flag(theme_group_, LV_OBJ_FLAG_SCROLLABLE);
+
+    theme_key_label_ = lv_label_create(theme_group_);
+    lv_label_set_text(theme_key_label_, "6");
+    lv_obj_set_style_text_font(theme_key_label_, key_font, 0);
+
     const auto light = view::palette(false).text;
     const auto dark = view::palette(true).text;
     auto* icon_font = assets_.load_font("Phosphor-Fill.ttf", 22);
-    theme_button_ = std::make_unique<IconButton>(core_obj_, view_model_, 32, 24, "",
+    theme_button_ = std::make_unique<IconButton>(theme_group_, view_model_, 28, 24, "",
                                                  icon_font ? icon_font : &lv_font_montserrat_14,
                                                  light, dark, toggle_theme_cb, &view_model_, true);
     theme_button_->build();
@@ -132,6 +146,9 @@ void NavBar::update_hints() {
         lv_subject_get_int(view_model_.settings_edit_active_subject()) != 0 || editing_name;
     const auto hints = hints_for(view_model_.current_page(), editing, editing_name);
     const auto palette = view::palette(view_model_.is_dark_mode());
+    if (theme_key_label_) {
+        lv_obj_set_style_text_color(theme_key_label_, palette.primary, 0);
+    }
     for (int i = 0; i < 3; ++i) {
         lv_label_set_text(hint_keys_[i], hints[i].key);
         lv_label_set_text(hint_actions_[i], hints[i].action);
