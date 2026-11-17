@@ -40,6 +40,7 @@ private:
 
     viewmodel::BaseViewModel& view_model_;
     app::AssetManager& assets_;
+    lv_obj_t* hints_bar_{nullptr};
     std::array<lv_obj_t*, 3> hint_keys_{};
     std::array<lv_obj_t*, 3> hint_actions_{};
     std::unique_ptr<IconButton> theme_button_;

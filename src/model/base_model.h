@@ -13,8 +13,8 @@ namespace model {
 enum class AppPage {
     Home      = 0,
     Settings  = 1,
-    Test1     = 2,
-    Test2     = 3,
+    Discover  = 2,
+    Spectrum  = 3,
     LoraError = 4,
 };
 

@@ -37,9 +37,19 @@ constexpr std::array<HelpRow, 5> kSettingsRows = {{
     {"ESC", "Back when not editing"},
 }};
 
-constexpr std::array<HelpRow, 2> kBackRows = {{
-    {"ESC", "Back"},
+constexpr std::array<HelpRow, 5> kDiscoverRows = {{
+    {"UP / DN", "Scroll the node list"},
+    {"OK", "Stop / continue scanning"},
+    {"ESC", "Stop scanning and go back"},
     {"6", "Light / dark"},
+    {"PRSC", "Screenshot"},
+}};
+
+constexpr std::array<HelpRow, 4> kSpectrumRows = {{
+    {"UP / DN", "Band / Channel view"},
+    {"LEFT / RIGHT", "Live / 1 min / 10 min"},
+    {"ESC", "Back to the menu"},
+    {"PRSC", "Screenshot"},
 }};
 
 constexpr std::array<HelpRow, 2> kErrorRows = {{
@@ -178,11 +188,15 @@ void HelpPopup::update_rows(model::AppPage page) {
             count = kSettingsRows.size();
             badge = "SETTINGS";
             break;
-        case model::AppPage::Test1:
-        case model::AppPage::Test2:
-            rows = kBackRows.data();
-            count = kBackRows.size();
-            badge = "TEST";
+        case model::AppPage::Discover:
+            rows = kDiscoverRows.data();
+            count = kDiscoverRows.size();
+            badge = "DISCOVER";
+            break;
+        case model::AppPage::Spectrum:
+            rows = kSpectrumRows.data();
+            count = kSpectrumRows.size();
+            badge = "SPECTRUM";
             break;
         case model::AppPage::LoraError:
             rows = kErrorRows.data();

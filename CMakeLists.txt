@@ -23,6 +23,12 @@ set(APP_ASSETS_ROOT "" CACHE PATH "Optional runtime assets root. Expected subdir
 set(APP_CONFIG_FILE "" CACHE FILEPATH "Application config file; defaults to the repository file on desktop and /etc/meshcore-toolkit.conf on device")
 set(APP_KEY_INPUT_DEVICE "" CACHE STRING "Optional Linux evdev keyboard/keypad device path, e.g. /dev/input/event0")
 set(APP_LORA_SPI_DEVICE "" CACHE STRING "Optional LoRa hat SPI device path, e.g. /dev/spidev0.0; empty auto-detects")
+set(APP_LORA_GPIO_CHIP "/dev/gpiochip0" CACHE STRING "GPIO character device that owns the SX1262 RESET/BUSY/DIO1 lines")
+set(APP_LORA_RST_GPIO "26" CACHE STRING "SX1262 RESET GPIO line offset")
+set(APP_LORA_BUSY_GPIO "22" CACHE STRING "SX1262 BUSY GPIO line offset")
+set(APP_LORA_IRQ_GPIO "23" CACHE STRING "SX1262 DIO1/IRQ GPIO line offset")
+set(APP_LORA_I2C_BUS "/dev/i2c-1" CACHE STRING "I2C bus that carries the PI4IOE5V6408 RF-switch expander")
+set(APP_LORA_PI4IO_ADDRESS "0x43" CACHE STRING "PI4IOE5V6408 7-bit I2C address")
 set(APP_LORA_POWER_PATH "/sys/class/leds/ext_5v_out/brightness" CACHE STRING "EXT 5V rail sysfs node that powers the LoRa hat")
 set(APP_FRAMEBUFFER_DEVICE "/dev/fb0" CACHE STRING "Linux framebuffer device path used by embedded builds")
 set(APP_DRM_DEVICE "/dev/dri/card0" CACHE STRING "Linux DRM device path used when APP_USE_DRM=ON")
@@ -71,6 +77,43 @@ endif()
 add_subdirectory("${lvgl_SOURCE_DIR}" "${lvgl_BINARY_DIR}" EXCLUDE_FROM_ALL)
 set(LVGL_SOURCE_DIR "${lvgl_SOURCE_DIR}")
 get_filename_component(LVGL_INCLUDE_PARENT "${LVGL_SOURCE_DIR}" DIRECTORY)
+
+# RadioLib - only the SX1262 command/protocol subset used by the Cap LoRa-1262.
+# Desktop builds are simulated and do not link it.
+if(NOT USE_DESKTOP)
+    FetchContent_Declare(
+        radiolib
+        GIT_REPOSITORY https://github.com/jgromes/RadioLib.git
+        GIT_TAG        187ef24791c3d844939b2be13a68bd890bd04e4c
+    )
+    FetchContent_GetProperties(radiolib)
+    if(NOT radiolib_POPULATED)
+        if(POLICY CMP0169)
+            cmake_policy(PUSH)
+            cmake_policy(SET CMP0169 OLD)
+        endif()
+        FetchContent_Populate(radiolib)
+        if(POLICY CMP0169)
+            cmake_policy(POP)
+        endif()
+    endif()
+
+    add_library(radiolib STATIC
+        "${radiolib_SOURCE_DIR}/src/Hal.cpp"
+        "${radiolib_SOURCE_DIR}/src/Module.cpp"
+        "${radiolib_SOURCE_DIR}/src/utils/CRC.cpp"
+        "${radiolib_SOURCE_DIR}/src/utils/ConvCode.cpp"
+        "${radiolib_SOURCE_DIR}/src/utils/Utils.cpp"
+        "${radiolib_SOURCE_DIR}/src/protocols/PhysicalLayer/PhysicalLayer.cpp"
+        "${radiolib_SOURCE_DIR}/src/modules/SX126x/SX126x.cpp"
+        "${radiolib_SOURCE_DIR}/src/modules/SX126x/SX126x_commands.cpp"
+        "${radiolib_SOURCE_DIR}/src/modules/SX126x/SX126x_config.cpp"
+        "${radiolib_SOURCE_DIR}/src/modules/SX126x/SX126x_LR_FHSS.cpp"
+        "${radiolib_SOURCE_DIR}/src/modules/SX126x/SX1262.cpp"
+    )
+    target_include_directories(radiolib SYSTEM PUBLIC "${radiolib_SOURCE_DIR}/src")
+    target_compile_features(radiolib PUBLIC cxx_std_17)
+endif()
 
 # other misc dependencies
 # desktop builds
@@ -415,12 +458,19 @@ target_include_directories(${PROJECT_NAME}_platform
     PUBLIC
         ${LVGL_INCLUDE_DIR}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/platform"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
 )
 
 target_compile_definitions(${PROJECT_NAME}_platform
     PUBLIC
         APP_KEY_INPUT_DEVICE="${APP_KEY_INPUT_DEVICE}"
         APP_LORA_SPI_DEVICE="${APP_LORA_SPI_DEVICE}"
+        APP_LORA_GPIO_CHIP="${APP_LORA_GPIO_CHIP}"
+        APP_LORA_RST_GPIO=${APP_LORA_RST_GPIO}
+        APP_LORA_BUSY_GPIO=${APP_LORA_BUSY_GPIO}
+        APP_LORA_IRQ_GPIO=${APP_LORA_IRQ_GPIO}
+        APP_LORA_I2C_BUS="${APP_LORA_I2C_BUS}"
+        APP_LORA_PI4IO_ADDRESS=${APP_LORA_PI4IO_ADDRESS}
         APP_LORA_POWER_PATH="${APP_LORA_POWER_PATH}"
         APP_FRAMEBUFFER_DEVICE="${APP_FRAMEBUFFER_DEVICE}"
         APP_DRM_DEVICE="${APP_DRM_DEVICE}"
@@ -431,6 +481,10 @@ target_link_libraries(${PROJECT_NAME}_platform
     PUBLIC
         lvgl
 )
+
+if(NOT USE_DESKTOP)
+    target_link_libraries(${PROJECT_NAME}_platform PUBLIC radiolib)
+endif()
 
 # ====================================================
 # Model sources

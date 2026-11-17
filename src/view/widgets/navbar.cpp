@@ -32,9 +32,10 @@ std::array<HintSpec, 3> hints_for(model::AppPage page, bool editing, bool editin
                 return {{{"L/R", "Change"}, {"OK", "Save"}, {"ESC", "Cancel"}}};
             }
             return {{{"Up/Dn", "Field"}, {"OK", "Edit"}, {"ESC", "Back"}}};
-        case model::AppPage::Test1:
-        case model::AppPage::Test2:
-            return {{{"", ""}, {"ESC", "Back"}, {"", ""}}};
+        case model::AppPage::Discover:
+            return {{{"Up/Dn", "Scroll"}, {"OK", "Toggle"}, {"ESC", "Back"}}};
+        case model::AppPage::Spectrum:
+            return {{{"Up/Dn", "Band/Ch"}, {"L/R", "Live/1/10"}, {"ESC", "Back"}}};
         case model::AppPage::LoraError:
             return {{{"OK", "Retry"}, {"", ""}, {"ESC", "Continue"}}};
         case model::AppPage::Home:
@@ -77,12 +78,12 @@ void NavBar::build() {
     lv_obj_set_style_pad_hor(core_obj_, 8, 0);
     reactive::bind_theme(core_obj_, view_model_.dark_mode_subject(), reactive::ThemeRole::Bar);
 
-    auto* hints_bar = lv_obj_create(core_obj_);
-    lv_obj_remove_style_all(hints_bar);
-    lv_obj_set_size(hints_bar, 250, LV_PCT(100));
-    lv_obj_set_flex_flow(hints_bar, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(hints_bar, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_clear_flag(hints_bar, LV_OBJ_FLAG_SCROLLABLE);
+    hints_bar_ = lv_obj_create(core_obj_);
+    lv_obj_remove_style_all(hints_bar_);
+    lv_obj_set_size(hints_bar_, 250, LV_PCT(100));
+    lv_obj_set_flex_flow(hints_bar_, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(hints_bar_, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(hints_bar_, LV_OBJ_FLAG_SCROLLABLE);
 
     const lv_font_t* key_font = assets_.load_standard_font(14);
     if (!key_font) key_font = &lv_font_montserrat_14;
@@ -90,7 +91,7 @@ void NavBar::build() {
     if (!action_font) action_font = &lv_font_montserrat_14;
 
     for (int i = 0; i < 3; ++i) {
-        auto* item = lv_obj_create(hints_bar);
+        auto* item = lv_obj_create(hints_bar_);
         lv_obj_remove_style_all(item);
         lv_obj_set_size(item, LV_SIZE_CONTENT, LV_PCT(100));
         lv_obj_set_flex_flow(item, LV_FLEX_FLOW_ROW);
@@ -129,6 +130,13 @@ void NavBar::build() {
                                                  icon_font ? icon_font : &lv_font_montserrat_14,
                                                  light, dark, toggle_theme_cb, &view_model_, true);
     theme_button_->build();
+    // All navigation keys are routed centrally; keeping the one real button
+    // out of the keypad group stops Enter from also clicking it while a
+    // screen action (open card, toggle scan) is being handled.
+    if (auto* group = lv_group_get_default()) {
+        lv_group_remove_obj(theme_button_->root());
+    }
+    lv_obj_clear_flag(theme_button_->root(), LV_OBJ_FLAG_CLICK_FOCUSABLE);
     platform::register_nav_button(2, theme_button_->root());
 
     page_observer_ = reactive::observe_obj(core_obj_, view_model_.current_page_subject(), page_changed_cb, this);
@@ -144,10 +152,24 @@ void NavBar::update_hints() {
     const bool editing_name = lv_subject_get_int(view_model_.node_edit_active_subject()) != 0;
     const bool editing =
         lv_subject_get_int(view_model_.settings_edit_active_subject()) != 0 || editing_name;
-    const auto hints = hints_for(view_model_.current_page(), editing, editing_name);
+    const auto page = view_model_.current_page();
+    const auto hints = hints_for(page, editing, editing_name);
     const auto palette = view::palette(view_model_.is_dark_mode());
     if (theme_key_label_) {
         lv_obj_set_style_text_color(theme_key_label_, palette.primary, 0);
+    }
+    // Spectrum has no theme toggle: the whole bar is available for its three
+    // key hints, and key 6 is consumed on that page.
+    const bool hide_theme = page == model::AppPage::Spectrum;
+    if (theme_group_) {
+        if (hide_theme) {
+            lv_obj_add_flag(theme_group_, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_remove_flag(theme_group_, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+    if (hints_bar_) {
+        lv_obj_set_width(hints_bar_, hide_theme ? LV_PCT(100) : 250);
     }
     for (int i = 0; i < 3; ++i) {
         lv_label_set_text(hint_keys_[i], hints[i].key);

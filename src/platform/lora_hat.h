@@ -25,6 +25,15 @@ struct LoRaHatStatus {
 // status byte. On desktop builds this returns a clearly-simulated result.
 LoRaHatStatus probe_lora_hat();
 
+// Powers the EXT 5V rail for a radio session and remembers the previous value
+// so release_lora_hat() can restore it. Idempotent; returns false (with a
+// human-readable reason) when the rail exists but cannot be driven.
+bool enable_lora_power(std::string& error);
+
+// SPI node that answered the last successful probe (empty before a probe).
+// The radio driver reuses it instead of poking every spidev node again.
+std::string detected_lora_spi_device();
+
 // Restores the EXT 5V rail to the value it had before probe_lora_hat().
 // Call on shutdown so the port is not left powered.
 void release_lora_hat();

@@ -42,6 +42,12 @@ const RegionPreset& region_preset(Region region);
 // Canonical LoRa bandwidths, indexed by bw_index (0..9).
 constexpr int kBandwidthCount = 10;
 const char* bandwidth_label(int index);
+float bandwidth_khz(int index);
+
+// MeshCore derives its LoRa preamble length from the spreading factor
+// (32 symbols for SF <= 8, 16 above). Keep presets on that rule so discovery
+// requests are heard by stock MeshCore nodes.
+int meshcore_preamble_for_sf(int sf);
 
 // Primary MeshCore radio settings. Mirrors MeshCore's `lora` namespace and
 // NodePrefs (https://github.com/meshcore-dev/MeshCore) so the on-device config
@@ -54,8 +60,8 @@ struct MeshConfig {
     int bw_index                     = 6;          // 62.5 kHz
     int cr                           = 5;          // 4/5
     int tx_power_dbm                 = 22;
-    int sync_word                    = 0x2B;
-    int preamble_len                 = 16;
+    int sync_word                    = 0x12; // MeshCore private sync word
+    int preamble_len                 = 32;
 };
 
 MeshConfig default_mesh_config();

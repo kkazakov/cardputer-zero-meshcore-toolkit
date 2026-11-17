@@ -87,6 +87,27 @@ void set_node_name(model::MeshConfig& mesh, const std::string& value) {
     mesh.node_name[model::kNodeNameBuffer - 1] = '\0';
 }
 
+// Configs written by the first releases carried Meshtastic's 0x2B sync word,
+// a 16-symbol preamble, and CR 4/5 for Europe. MeshCore uses 0x12, 32 symbols
+// for SF<=8, and CR 4/8 for the EU/UK Narrow network. Migrate the old defaults
+// in place (the result is written back on exit) so an existing per-user file
+// does not silently make Discover deaf.
+void normalize_meshcore_radio(model::MeshConfig& mesh) {
+    const bool old_sync = mesh.sync_word == 0x2B;
+    if (old_sync) {
+        mesh.sync_word = 0x12;
+    }
+    if (mesh.preamble_len == 16 && mesh.sf <= 8) {
+        mesh.preamble_len = 32;
+    }
+    // Only the first-release Europe default is migrated; a deliberately custom
+    // CR is left alone unless it still carries the old sync marker.
+    if (old_sync && mesh.region == model::Region::Europe && mesh.bw_index == 6 &&
+        mesh.sf == 8 && mesh.cr == 5) {
+        mesh.cr = 8;
+    }
+}
+
 } // namespace
 
 bool load_application_config(const std::string& path,
@@ -157,6 +178,7 @@ bool load_application_config(const std::string& path,
         }
     }
 
+    normalize_meshcore_radio(config.mesh);
     return true;
 }
 

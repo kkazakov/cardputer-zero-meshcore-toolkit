@@ -6,10 +6,11 @@
 
 #include "screen_manager.h"
 
+#include "discover_screen.h"
 #include "home_screen.h"
 #include "lora_error_screen.h"
-#include "placeholder_screen.h"
 #include "settings_screen.h"
+#include "spectrum_screen.h"
 
 namespace app {
 namespace {
@@ -53,6 +54,10 @@ void ScreenManager::start() {
                                                          current_page_observer,
                                                          this,
                                                          nullptr);
+    // The observer usually delivers the initial value, but loading the current
+    // page explicitly makes the startup path deterministic (the radio probe may
+    // already have selected Spectrum before the manager starts).
+    request_page(view_model_.current_page());
 }
 
 void ScreenManager::request_page(model::AppPage page) {
@@ -79,11 +84,11 @@ void ScreenManager::flush_requested_page() {
         case model::AppPage::Settings:
             load_screen(std::make_unique<screen::SettingsScreen>(view_model_, assets_));
             break;
-        case model::AppPage::Test1:
-            load_screen(std::make_unique<screen::PlaceholderScreen>(view_model_, assets_, "Test 1"));
+        case model::AppPage::Discover:
+            load_screen(std::make_unique<screen::DiscoverScreen>(view_model_, assets_));
             break;
-        case model::AppPage::Test2:
-            load_screen(std::make_unique<screen::PlaceholderScreen>(view_model_, assets_, "Test 2"));
+        case model::AppPage::Spectrum:
+            load_screen(std::make_unique<screen::SpectrumScreen>(view_model_, assets_));
             break;
         case model::AppPage::LoraError:
             load_screen(std::make_unique<screen::LoraErrorScreen>(view_model_, assets_));

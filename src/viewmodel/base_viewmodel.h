@@ -8,10 +8,14 @@
 
 #include "subjects.h"
 #include "base_model.h"
+#include "discover_scanner.h"
+#include "spectrum_scanner.h"
 
 #include "lvgl.h"
 
 #include <array>
+#include <cstdint>
+#include <memory>
 
 namespace viewmodel {
 
@@ -43,6 +47,17 @@ public:
     lv_subject_t* node_edit_cursor_subject();
     lv_subject_t* lora_ok_subject();
     lv_subject_t* lora_error_subject();
+    lv_subject_t* discover_summary_subject();
+    lv_subject_t* discover_list_subject();
+    lv_subject_t* discover_scanning_subject();
+    lv_subject_t* discover_scroll_subject();
+    lv_subject_t* spectrum_peak_subject();
+    lv_subject_t* spectrum_floor_subject();
+    lv_subject_t* spectrum_channel_subject();
+    lv_subject_t* spectrum_busy_subject();
+    lv_subject_t* spectrum_view_subject();
+    lv_subject_t* spectrum_window_subject();
+    lv_subject_t* spectrum_status_subject();
 
     bool is_dark_mode() const;
     void set_dark_mode(bool enabled);
@@ -54,8 +69,8 @@ public:
     void set_current_page(model::AppPage page);
     void show_home();
     void show_settings();
-    void show_test1();
-    void show_test2();
+    void show_discover();
+    void show_spectrum();
     void show_lora_error();
 
     int carousel_selection() const;
@@ -79,11 +94,31 @@ public:
     void set_mesh_config(const model::MeshConfig& config);
     void set_lora_status(bool ok, const char* error);
 
+    // Discover page actions and polling.
+    void poll_discover();
+    void toggle_discover_scan();
+    void scroll_discover(int delta);
+
+    // Spectrum page actions and polling.
+    void poll_spectrum();
+    void toggle_spectrum_view();
+    void cycle_spectrum_window(int delta);
+    const platform::SpectrumSnapshot& spectrum_snapshot() const;
+
+    void shutdown_radio();
     void request_quit();
 
 private:
     void publish_all();
     void publish_mesh();
+    void publish_discover(bool force);
+    void publish_spectrum(bool force);
+    void start_discover();
+    void start_spectrum();
+    void stop_feature_sessions();
+    bool ensure_radio(std::string& error);
+    static const char* page_title(model::AppPage page);
+    static constexpr int kDiscoverVisibleRows = 5;
 
     model::BaseModel model_;
     reactive::StringSubject<32> title_subject_;
@@ -106,9 +141,30 @@ private:
     reactive::IntSubject node_edit_cursor_subject_;
     reactive::BoolSubject lora_ok_subject_;
     reactive::StringSubject<96> lora_error_subject_;
+    reactive::StringSubject<320> discover_summary_subject_;
+    reactive::StringSubject<1800> discover_list_subject_;
+    reactive::BoolSubject discover_scanning_subject_;
+    reactive::IntSubject discover_scroll_subject_;
+    reactive::IntSubject spectrum_peak_subject_;
+    reactive::IntSubject spectrum_floor_subject_;
+    reactive::IntSubject spectrum_channel_subject_;
+    reactive::IntSubject spectrum_busy_subject_;
+    reactive::IntSubject spectrum_view_subject_;
+    reactive::IntSubject spectrum_window_subject_;
+    reactive::StringSubject<128> spectrum_status_subject_;
 
     std::array<char, model::kNodeNameBuffer> node_name_before_edit_{};
     model::MeshConfig mesh_before_edit_{};
+
+    std::unique_ptr<platform::MeshRadio> radio_;
+    std::unique_ptr<platform::DiscoverScanner> discover_;
+    std::unique_ptr<platform::SpectrumScanner> spectrum_;
+    platform::SpectrumSnapshot spectrum_snapshot_{};
+
+    int discover_scroll_{0};
+    uint32_t discover_published_revision_{0};
+    uint32_t spectrum_published_revision_{0};
+    uint32_t last_discover_publish_ms_{0};
 };
 
 } // namespace viewmodel

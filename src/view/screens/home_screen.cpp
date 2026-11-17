@@ -22,9 +22,9 @@ struct CarouselItem {
 };
 
 constexpr std::array<CarouselItem, model::kCarouselItemCount> kItems = {{
+    {"Spectrum", "RF band analyzer"},
+    {"Discover", "Scan nearby nodes"},
     {"Settings", "Radio & node"},
-    {"Test 1", "Placeholder"},
-    {"Test 2", "Placeholder"},
 }};
 
 constexpr int kCenterCardX = 87;

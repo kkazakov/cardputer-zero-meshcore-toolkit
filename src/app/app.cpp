@@ -194,13 +194,10 @@ private:
                 return handle_home(key);
             case model::AppPage::Settings:
                 return handle_settings(key);
-            case model::AppPage::Test1:
-            case model::AppPage::Test2:
-                if (key == LV_KEY_ESC) {
-                    view_model_.show_home();
-                    return true;
-                }
-                return false;
+            case model::AppPage::Discover:
+                return handle_discover(key);
+            case model::AppPage::Spectrum:
+                return handle_spectrum(key);
             case model::AppPage::LoraError:
                 if (key == LV_KEY_ENTER) {
                     retry_lora_();
@@ -232,6 +229,50 @@ private:
         }
         if (key == LV_KEY_ESC) {
             view_model_.request_quit();
+            return true;
+        }
+        return false;
+    }
+
+    bool handle_discover(uint32_t key) {
+        if (key == LV_KEY_ESC) {
+            view_model_.show_home();
+            return true;
+        }
+        if (key == LV_KEY_ENTER) {
+            view_model_.toggle_discover_scan();
+            return true;
+        }
+        if (key == LV_KEY_UP) {
+            view_model_.scroll_discover(-1);
+            return true;
+        }
+        if (key == LV_KEY_DOWN) {
+            view_model_.scroll_discover(1);
+            return true;
+        }
+        return false;
+    }
+
+    bool handle_spectrum(uint32_t key) {
+        if (key == '6') {
+            // The theme toggle is deliberately absent on Spectrum.
+            return true;
+        }
+        if (key == LV_KEY_ESC) {
+            view_model_.show_home();
+            return true;
+        }
+        if (key == LV_KEY_UP || key == LV_KEY_DOWN) {
+            view_model_.toggle_spectrum_view();
+            return true;
+        }
+        if (key == LV_KEY_LEFT) {
+            view_model_.cycle_spectrum_window(-1);
+            return true;
+        }
+        if (key == LV_KEY_RIGHT) {
+            view_model_.cycle_spectrum_window(1);
             return true;
         }
         return false;
@@ -423,14 +464,13 @@ int Application::run() {
 #endif
 
     ScreenManager screen_manager(view_model, assets);
-    screen_manager.start();
 
     auto probe_lora = [&]() {
         const auto status = platform::probe_lora_hat();
         view_model.set_lora_status(status.working, status.error.c_str());
         if (status.working) {
             LOG_INFO("LoRa hat OK ({})", status.device);
-            view_model.show_home();
+            view_model.show_spectrum();
         } else {
             LOG_ERROR("LoRa hat unavailable: {}", status.error);
             view_model.show_lora_error();
@@ -451,6 +491,7 @@ int Application::run() {
                                                    &running);
 
     probe_lora();
+    screen_manager.start();
 
     LOG_INFO("LVGL app started at {}x{}", lv_display_get_horizontal_resolution(display),
              lv_display_get_vertical_resolution(display));
@@ -464,6 +505,7 @@ int Application::run() {
     }
 
     persist_config(persistence);
+    view_model.shutdown_radio();
     platform::release_lora_hat();
 
     if (quit_observer) {

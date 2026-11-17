@@ -42,6 +42,7 @@ constexpr useconds_t kPowerSettleUs = 150000;
 
 // Previous rail value so shutdown can put it back. -1 = never touched.
 int g_saved_power = -1;
+std::string g_detected_spi_device;
 
 bool read_sysfs_value(const char* path, int& value) {
     const int fd = open(path, O_RDONLY);
@@ -168,6 +169,23 @@ bool sx126x_responds(const std::string& device, std::string& error) {
 
 } // namespace
 
+std::string detected_lora_spi_device() {
+#if USE_DESKTOP
+    return {};
+#else
+    return g_detected_spi_device;
+#endif
+}
+
+bool enable_lora_power(std::string& error) {
+#if USE_DESKTOP
+    (void)error;
+    return true;
+#else
+    return enable_hat_power(error);
+#endif
+}
+
 LoRaHatStatus probe_lora_hat() {
     LoRaHatStatus status;
 
@@ -197,6 +215,7 @@ LoRaHatStatus probe_lora_hat() {
             status.present = true;
             status.working = true;
             status.device = device;
+            g_detected_spi_device = device;
             return status;
         }
         // Keep the most recent error for reporting.
