@@ -53,18 +53,20 @@ constexpr uint32_t kTextDisabled = 0xc2c2c2;
 } // namespace light
 
 namespace dark {
-constexpr uint32_t kPrimary      = 0x63e2b7;
-constexpr uint32_t kInfo         = 0x70c0e8;
-constexpr uint32_t kSuccess      = 0x63e2b7;
-constexpr uint32_t kWarning      = 0xf2c97d;
-constexpr uint32_t kError        = 0xe88080;
-constexpr uint32_t kBody         = 0x101014;
-constexpr uint32_t kCard         = 0x18181c;
-constexpr uint32_t kAction       = 0x0f0f0f;
-constexpr uint32_t kButton       = 0x141414;
-constexpr uint32_t kBorder       = 0x3d3d3d;
-constexpr uint32_t kTextPrimary  = 0xe6e6e6;
-constexpr uint32_t kTextDisabled = 0x616161;
+// Palette shared with CardputerZero Mouse Jiggler / Ultimate-Remote's Linux
+// renderer: deep navy canvas, panel cards, mint accent.
+constexpr uint32_t kPrimary      = 0x88f0b3; // mint accent
+constexpr uint32_t kInfo         = 0x80baff; // blue
+constexpr uint32_t kSuccess      = 0x88f0b3;
+constexpr uint32_t kWarning      = 0xffd18b; // amber
+constexpr uint32_t kError        = 0xf29ec0; // pink
+constexpr uint32_t kBody         = 0x0b111a; // canvas
+constexpr uint32_t kCard         = 0x1b2b37; // raised card
+constexpr uint32_t kAction       = 0x141f2d; // panel
+constexpr uint32_t kButton       = 0x1b2b37; // focused row / button
+constexpr uint32_t kBorder       = 0x27374a;
+constexpr uint32_t kTextPrimary  = 0xedf3fa;
+constexpr uint32_t kTextDisabled = 0x95a6bb;
 } // namespace dark
 
 } // namespace color

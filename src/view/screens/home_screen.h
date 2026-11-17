@@ -26,6 +26,7 @@ private:
         lv_obj_t* container{nullptr};
         lv_obj_t* title{nullptr};
         lv_obj_t* subtitle{nullptr};
+        lv_obj_t* accent_bar{nullptr};
     };
 
     void render();

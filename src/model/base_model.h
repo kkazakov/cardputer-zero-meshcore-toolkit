@@ -58,6 +58,9 @@ public:
     void set_settings_focus(int index);
     void move_settings_focus(int delta);
 
+    bool settings_edit_active() const;
+    void set_settings_edit_active(bool active);
+
     bool node_edit_active() const;
     void set_node_edit_active(bool active);
     int node_edit_cursor() const;
@@ -65,11 +68,12 @@ public:
     void move_node_edit_cursor(int delta);
 
 private:
-    bool dark_mode_             = false;
+    bool dark_mode_             = true;
     AppPage current_page_       = AppPage::Home;
     MeshConfig mesh_            = default_mesh_config();
     int carousel_selection_     = 0;
     int settings_focus_         = 0;
+    bool settings_edit_active_  = false;
     bool node_edit_active_      = false;
     int node_edit_cursor_       = 0;
 };

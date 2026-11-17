@@ -228,9 +228,10 @@ private:
     }
 
     bool handle_settings(uint32_t key) {
-        const bool editing = lv_subject_get_int(view_model_.node_edit_active_subject()) != 0;
+        const bool editing_name = lv_subject_get_int(view_model_.node_edit_active_subject()) != 0;
+        const bool editing_value = lv_subject_get_int(view_model_.settings_edit_active_subject()) != 0;
 
-        if (editing) {
+        if (editing_name) {
             if (key == LV_KEY_ENTER) {
                 view_model_.toggle_node_edit(); // commit
                 return true;
@@ -262,6 +263,27 @@ private:
             return false;
         }
 
+        if (editing_value) {
+            // OK opened this row; change it with L/R (or up/down), OK saves.
+            if (key == LV_KEY_ENTER) {
+                view_model_.commit_settings_edit();
+                return true;
+            }
+            if (key == LV_KEY_ESC) {
+                view_model_.cancel_settings_edit();
+                return true;
+            }
+            if (is_left(key) || key == LV_KEY_DOWN) {
+                view_model_.adjust_focused_value(-1);
+                return true;
+            }
+            if (is_right(key) || key == LV_KEY_UP) {
+                view_model_.adjust_focused_value(1);
+                return true;
+            }
+            return false;
+        }
+
         if (key == LV_KEY_ESC) {
             view_model_.show_home();
             return true;
@@ -274,18 +296,13 @@ private:
             view_model_.move_settings_focus(1);
             return true;
         }
-        if (key == LV_KEY_LEFT) {
-            view_model_.adjust_focused_value(-1);
-            return true;
-        }
-        if (key == LV_KEY_RIGHT) {
-            view_model_.adjust_focused_value(1);
-            return true;
-        }
-        if (key == LV_KEY_ENTER &&
-            lv_subject_get_int(view_model_.settings_focus_subject()) ==
+        if (key == LV_KEY_ENTER) {
+            if (lv_subject_get_int(view_model_.settings_focus_subject()) ==
                 static_cast<int>(model::SettingsField::NodeName)) {
-            view_model_.toggle_node_edit(); // begin editing
+                view_model_.toggle_node_edit();
+            } else {
+                view_model_.begin_settings_edit();
+            }
             return true;
         }
         return false;

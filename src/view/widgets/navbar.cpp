@@ -22,10 +22,13 @@ struct HintSpec {
     const char* action;
 };
 
-std::array<HintSpec, 3> hints_for(model::AppPage page) {
+std::array<HintSpec, 3> hints_for(model::AppPage page, bool editing) {
     switch (page) {
         case model::AppPage::Settings:
-            return {{{"Up/Dn", "Field"}, {"L/R", "Edit"}, {"ESC", "Back"}}};
+            if (editing) {
+                return {{{"Z/C", "Change"}, {"OK", "Save"}, {"ESC", "Cancel"}}};
+            }
+            return {{{"F/X", "Field"}, {"OK", "Edit"}, {"ESC", "Back"}}};
         case model::AppPage::Test1:
         case model::AppPage::Test2:
             return {{{"", ""}, {"ESC", "Back"}, {"", ""}}};
@@ -113,13 +116,18 @@ void NavBar::build() {
 
     page_observer_ = reactive::observe_obj(core_obj_, view_model_.current_page_subject(), page_changed_cb, this);
     theme_observer_ = reactive::observe_obj(core_obj_, view_model_.dark_mode_subject(), theme_changed_cb, this);
+    reactive::observe_obj(core_obj_, view_model_.settings_edit_active_subject(), page_changed_cb, this);
+    reactive::observe_obj(core_obj_, view_model_.node_edit_active_subject(), page_changed_cb, this);
 
     update_hints();
     update_theme_icon();
 }
 
 void NavBar::update_hints() {
-    const auto hints = hints_for(view_model_.current_page());
+    const bool editing =
+        lv_subject_get_int(view_model_.settings_edit_active_subject()) != 0 ||
+        lv_subject_get_int(view_model_.node_edit_active_subject()) != 0;
+    const auto hints = hints_for(view_model_.current_page(), editing);
     const auto palette = view::palette(view_model_.is_dark_mode());
     for (int i = 0; i < 3; ++i) {
         lv_label_set_text(hint_keys_[i], hints[i].key);

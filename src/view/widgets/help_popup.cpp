@@ -30,11 +30,11 @@ constexpr std::array<HelpRow, 5> kHomeRows = {{
 }};
 
 constexpr std::array<HelpRow, 5> kSettingsRows = {{
-    {"UP / DN", "Choose field"},
-    {"L / R", "Edit value"},
-    {"OK", "Edit node name"},
-    {"ESC", "Back"},
-    {"6", "Light / dark"},
+    {"F / X", "Choose field (no FN needed)"},
+    {"OK", "Edit the focused field"},
+    {"Z / C", "Change the value while editing"},
+    {"OK / ESC", "Save / cancel the edit"},
+    {"ESC", "Back when not editing"},
 }};
 
 constexpr std::array<HelpRow, 2> kBackRows = {{

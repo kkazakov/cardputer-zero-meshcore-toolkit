@@ -47,7 +47,7 @@ void BaseScreen::init() {
     lv_obj_set_size(content_, LV_PCT(100), view::kScreenHeight - view::kTitleBarHeight - view::kNavBarHeight);
     lv_obj_align(content_, LV_ALIGN_TOP_MID, 0, view::kTitleBarHeight);
     lv_obj_clear_flag(content_, LV_OBJ_FLAG_SCROLLABLE);
-    reactive::bind_theme(content_, view_model_.dark_mode_subject(), reactive::ThemeRole::Surface);
+    reactive::bind_theme(content_, view_model_.dark_mode_subject(), reactive::ThemeRole::Screen);
 
     build_content(content_);
 }

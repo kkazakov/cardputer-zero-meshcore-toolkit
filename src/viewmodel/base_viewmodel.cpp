@@ -46,6 +46,7 @@ BaseViewModel::BaseViewModel()
       tx_power_subject_(model_.mesh_config().tx_power_dbm),
       sync_word_subject_(model_.mesh_config().sync_word),
       preamble_subject_(model_.mesh_config().preamble_len),
+      settings_edit_active_subject_(false),
       node_edit_active_subject_(false),
       node_edit_cursor_subject_(0),
       lora_ok_subject_(false),
@@ -68,6 +69,7 @@ lv_subject_t* BaseViewModel::cr_subject() { return cr_subject_.native(); }
 lv_subject_t* BaseViewModel::tx_power_subject() { return tx_power_subject_.native(); }
 lv_subject_t* BaseViewModel::sync_word_subject() { return sync_word_subject_.native(); }
 lv_subject_t* BaseViewModel::preamble_subject() { return preamble_subject_.native(); }
+lv_subject_t* BaseViewModel::settings_edit_active_subject() { return settings_edit_active_subject_.native(); }
 lv_subject_t* BaseViewModel::node_edit_active_subject() { return node_edit_active_subject_.native(); }
 lv_subject_t* BaseViewModel::node_edit_cursor_subject() { return node_edit_cursor_subject_.native(); }
 lv_subject_t* BaseViewModel::lora_ok_subject() { return lora_ok_subject_.native(); }
@@ -125,11 +127,49 @@ void BaseViewModel::activate_selection() {
 }
 
 void BaseViewModel::move_settings_focus(int delta) {
+    if (model_.settings_edit_active()) {
+        return;
+    }
     model_.move_settings_focus(delta);
     publish_mesh();
 }
 
+bool BaseViewModel::settings_edit_active() const {
+    return model_.settings_edit_active();
+}
+
+void BaseViewModel::begin_settings_edit() {
+    if (model_.settings_edit_active()) {
+        return;
+    }
+    // Snapshot so ESC can restore the value the edit started from.
+    mesh_before_edit_ = model_.mesh_config();
+    model_.set_settings_edit_active(true);
+    publish_mesh();
+}
+
+void BaseViewModel::commit_settings_edit() {
+    if (!model_.settings_edit_active()) {
+        return;
+    }
+    model_.set_settings_edit_active(false);
+    publish_mesh();
+}
+
+void BaseViewModel::cancel_settings_edit() {
+    if (!model_.settings_edit_active()) {
+        return;
+    }
+    model_.set_mesh_config(mesh_before_edit_);
+    model_.set_settings_edit_active(false);
+    publish_mesh();
+}
+
 void BaseViewModel::adjust_focused_value(int delta) {
+    if (!model_.settings_edit_active()) {
+        return; // L/R only change values once OK opened the row
+    }
+
     auto& mesh = model_.mutable_mesh_config();
     const auto field = static_cast<model::SettingsField>(model_.settings_focus());
 
@@ -280,6 +320,7 @@ void BaseViewModel::publish_mesh() {
     preamble_subject_.set(mesh.preamble_len);
     carousel_selection_subject_.set(model_.carousel_selection());
     settings_focus_subject_.set(model_.settings_focus());
+    settings_edit_active_subject_.set(model_.settings_edit_active());
     node_edit_active_subject_.set(model_.node_edit_active());
     node_edit_cursor_subject_.set(model_.node_edit_cursor());
 }

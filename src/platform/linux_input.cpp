@@ -49,6 +49,27 @@ struct EvdevKeypad {
 };
 #endif
 
+// The arrow keys sit under FN on the CardputerZero keyboard, so plain F/X and
+// Z/C act as up/down and left/right everywhere in the app.
+uint32_t normalize_nav_letter(uint32_t key) {
+    switch (key) {
+        case 'f':
+        case 'F':
+            return LV_KEY_UP;
+        case 'x':
+        case 'X':
+            return LV_KEY_DOWN;
+        case 'z':
+        case 'Z':
+            return LV_KEY_LEFT;
+        case 'c':
+        case 'C':
+            return LV_KEY_RIGHT;
+        default:
+            return key;
+    }
+}
+
 size_t nav_key_to_index(uint32_t key) {
     if (nav_shortcut_mode) {
         switch (key) {
@@ -124,7 +145,8 @@ void ensure_long_press_timer() {
     }
 }
 
-void route_key_state(uint32_t key, bool pressed) {
+void route_key_state(uint32_t raw_key, bool pressed) {
+    const uint32_t key = normalize_nav_letter(raw_key);
     const bool new_hold = pressed && (!last_key_pressed || pressed_key != key);
     if (new_hold) {
         pressed_key = key;
@@ -204,6 +226,10 @@ uint32_t map_evdev_key(uint16_t code) {
             return 'z';
         case KEY_C:
             return 'c';
+        case KEY_F:
+            return 'f';
+        case KEY_X:
+            return 'x';
         case KEY_4:
             return '4';
         case KEY_5:
@@ -235,7 +261,8 @@ bool has_nav_keys(int fd) {
     };
 
     return has_key(KEY_ESC) || has_key(KEY_LEFT) || has_key(KEY_RIGHT) || has_key(KEY_Z) ||
-           has_key(KEY_C) || has_key(KEY_4) || has_key(KEY_5) || has_key(KEY_6) ||
+           has_key(KEY_C) || has_key(KEY_F) || has_key(KEY_X) ||
+           has_key(KEY_4) || has_key(KEY_5) || has_key(KEY_6) ||
            has_key(KEY_7) || has_key(KEY_8) || has_key(KEY_UP) || has_key(KEY_DOWN) ||
            has_key(KEY_ENTER) || has_key(KEY_KPENTER) || has_key(KEY_BACKSPACE) ||
            has_key(KEY_SYSRQ) || has_key(KEY_HELP);
@@ -430,6 +457,10 @@ const char* describe_key(uint32_t key) {
             return "Left";
         case LV_KEY_RIGHT:
             return "Right";
+        case LV_KEY_UP:
+            return "Up";
+        case LV_KEY_DOWN:
+            return "Down";
         case kKeyPrintScreen:
             return "PrintScreen";
         case kKeyHelp:

@@ -75,6 +75,14 @@ void BaseModel::move_settings_focus(int delta) {
     set_settings_focus(settings_focus_ + delta);
 }
 
+bool BaseModel::settings_edit_active() const {
+    return settings_edit_active_;
+}
+
+void BaseModel::set_settings_edit_active(bool active) {
+    settings_edit_active_ = active;
+}
+
 bool BaseModel::node_edit_active() const {
     return node_edit_active_;
 }

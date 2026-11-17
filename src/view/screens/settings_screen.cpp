@@ -90,6 +90,7 @@ void SettingsScreen::build_content(lv_obj_t* content) {
         view_model().tx_power_subject(),
         view_model().sync_word_subject(),
         view_model().preamble_subject(),
+        view_model().settings_edit_active_subject(),
         view_model().node_edit_active_subject(),
         view_model().node_edit_cursor_subject(),
         view_model().dark_mode_subject(),
@@ -105,13 +106,21 @@ void SettingsScreen::refresh() {
     const int focus = lv_subject_get_int(view_model().settings_focus_subject());
     const bool dark = view_model().is_dark_mode();
     const auto palette = view::palette(dark);
+    const bool editing_value = lv_subject_get_int(view_model().settings_edit_active_subject()) != 0;
 
     for (int i = 0; i < model::kSettingsFieldCount; ++i) {
         const bool focused = i == focus;
         lv_obj_set_style_bg_color(rows_[i].container, palette.button, 0);
         lv_obj_set_style_bg_opa(rows_[i].container, focused ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
-        lv_obj_set_style_text_color(rows_[i].name, focused ? palette.text : palette.text_disabled, 0);
-        lv_obj_set_style_text_color(rows_[i].value, focused ? palette.text : palette.text, 0);
+        lv_obj_set_style_border_width(rows_[i].container, 0, 0);
+        if (focused) {
+            // While a value is being edited the row gets an accent outline.
+            lv_obj_set_style_border_width(rows_[i].container, editing_value ? 1 : 0, 0);
+            lv_obj_set_style_border_color(rows_[i].container, palette.primary, 0);
+        }
+        lv_obj_set_style_text_color(rows_[i].name,
+                                    focused ? palette.primary : palette.text_disabled, 0);
+        lv_obj_set_style_text_color(rows_[i].value, palette.text, 0);
     }
 
     // Node name (with inline cursor while editing).
@@ -147,6 +156,14 @@ void SettingsScreen::refresh() {
     lv_label_set_text_fmt(rows_[6].value, "%d dBm", static_cast<int>(lv_subject_get_int(view_model().tx_power_subject())));
     lv_label_set_text_fmt(rows_[7].value, "0x%02X", static_cast<unsigned>(lv_subject_get_int(view_model().sync_word_subject())));
     lv_label_set_text_fmt(rows_[8].value, "%d", static_cast<int>(lv_subject_get_int(view_model().preamble_subject())));
+
+    // While a value is open for editing, show the change arrows around it.
+    if (editing_value && focus != static_cast<int>(model::SettingsField::NodeName)) {
+        char wrapped[64];
+        std::snprintf(wrapped, sizeof(wrapped), "< %s >", lv_label_get_text(rows_[focus].value));
+        lv_label_set_text(rows_[focus].value, wrapped);
+        lv_obj_set_style_text_color(rows_[focus].value, palette.primary, 0);
+    }
 
     lv_obj_scroll_to_view(rows_[focus].container, LV_ANIM_ON);
 }

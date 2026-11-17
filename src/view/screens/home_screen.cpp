@@ -92,6 +92,17 @@ void HomeScreen::build_content(lv_obj_t* content) {
         if (!show_subtitle) {
             lv_obj_add_flag(card.subtitle, LV_OBJ_FLAG_HIDDEN);
         }
+
+        if (show_subtitle) {
+            // Accent tick on top of the active card, as in the sibling app.
+            card.accent_bar = lv_obj_create(card.container);
+            lv_obj_remove_style_all(card.accent_bar);
+            lv_obj_set_size(card.accent_bar, 32, 3);
+            lv_obj_set_style_radius(card.accent_bar, 1, 0);
+            lv_obj_set_style_bg_opa(card.accent_bar, LV_OPA_COVER, 0);
+            lv_obj_clear_flag(card.accent_bar, LV_OBJ_FLAG_SCROLLABLE);
+            lv_obj_align(card.accent_bar, LV_ALIGN_TOP_MID, 0, 0);
+        }
     };
 
     build_card(kLeftCardX, kSideCardY, kSideCardW, kSideCardH, left_, side_font, false);
@@ -124,11 +135,21 @@ void HomeScreen::build_content(lv_obj_t* content) {
 
 void HomeScreen::style_card(const Card& card, lv_color_t accent, bool center) {
     const auto palette = view::palette(view_model().is_dark_mode());
-    lv_obj_set_style_bg_color(card.container, palette.surface, 0);
+    // Active card sits on the raised card color; side cards on the panel color,
+    // matching the sibling app's carousel.
+    lv_obj_set_style_bg_color(card.container, center ? palette.button : palette.surface, 0);
     lv_obj_set_style_border_color(card.container, center ? accent : palette.border, 0);
     lv_obj_set_style_border_width(card.container, center ? 2 : 1, 0);
     lv_obj_set_style_text_color(card.title, center ? palette.text : palette.text_disabled, 0);
-    lv_obj_set_style_text_color(card.subtitle, palette.text_disabled, 0);
+    lv_obj_set_style_text_color(card.subtitle, center ? palette.text_disabled : palette.border, 0);
+
+    if (card.accent_bar) {
+        if (center) {
+            lv_obj_remove_flag(card.accent_bar, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(card.accent_bar, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
 }
 
 void HomeScreen::render() {
@@ -153,9 +174,13 @@ void HomeScreen::render() {
     lv_label_set_text(right_.title, kItems[right_index].title);
 
     const auto palette = view::palette(view_model().is_dark_mode());
-    style_card(center_, accent_color(palette, center_index), true);
+    const auto center_accent = accent_color(palette, center_index);
+    style_card(center_, center_accent, true);
     style_card(left_, palette.border, false);
     style_card(right_, palette.border, false);
+    if (center_.accent_bar) {
+        lv_obj_set_style_bg_color(center_.accent_bar, center_accent, 0);
+    }
 
     for (int i = 0; i < count; ++i) {
         const bool active = i == selected;

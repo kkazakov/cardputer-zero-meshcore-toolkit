@@ -38,6 +38,7 @@ public:
     lv_subject_t* tx_power_subject();
     lv_subject_t* sync_word_subject();
     lv_subject_t* preamble_subject();
+    lv_subject_t* settings_edit_active_subject();
     lv_subject_t* node_edit_active_subject();
     lv_subject_t* node_edit_cursor_subject();
     lv_subject_t* lora_ok_subject();
@@ -62,6 +63,10 @@ public:
     void activate_selection();
 
     void move_settings_focus(int delta);
+    bool settings_edit_active() const;
+    void begin_settings_edit();
+    void commit_settings_edit();
+    void cancel_settings_edit();
     void adjust_focused_value(int delta);
 
     void toggle_node_edit();
@@ -95,12 +100,14 @@ private:
     reactive::IntSubject tx_power_subject_;
     reactive::IntSubject sync_word_subject_;
     reactive::IntSubject preamble_subject_;
+    reactive::BoolSubject settings_edit_active_subject_;
     reactive::BoolSubject node_edit_active_subject_;
     reactive::IntSubject node_edit_cursor_subject_;
     reactive::BoolSubject lora_ok_subject_;
     reactive::StringSubject<96> lora_error_subject_;
 
     std::array<char, model::kNodeNameBuffer> node_name_before_edit_{};
+    model::MeshConfig mesh_before_edit_{};
 };
 
 } // namespace viewmodel
