@@ -1,13 +1,15 @@
 /*
- * SPDX-FileCopyrightText: 2026 M5Stack Technology CO LTD
+ * SPDX-FileCopyrightText: 2026 Meshcore Toolkit contributors
  *
  * SPDX-License-Identifier: MIT
  */
 
 #include "screen_manager.h"
 
-#include "apple_screen.h"
-#include "butter_screen.h"
+#include "home_screen.h"
+#include "lora_error_screen.h"
+#include "placeholder_screen.h"
+#include "settings_screen.h"
 
 namespace app {
 namespace {
@@ -53,18 +55,6 @@ void ScreenManager::start() {
                                                          nullptr);
 }
 
-void ScreenManager::show_apple_screen() {
-    load_screen(std::make_unique<screen::AppleScreen>(view_model_, assets_));
-    loaded_page_ = model::AppPage::Apple;
-    has_loaded_page_ = true;
-}
-
-void ScreenManager::show_butter_screen() {
-    load_screen(std::make_unique<screen::ButterScreen>(view_model_, assets_));
-    loaded_page_ = model::AppPage::Butter;
-    has_loaded_page_ = true;
-}
-
 void ScreenManager::request_page(model::AppPage page) {
     requested_page_ = page;
 
@@ -82,12 +72,27 @@ void ScreenManager::flush_requested_page() {
         return;
     }
 
-    if (requested_page_ == model::AppPage::Butter) {
-        show_butter_screen();
-        return;
-    }
+    loaded_page_ = requested_page_;
+    has_loaded_page_ = true;
 
-    show_apple_screen();
+    switch (requested_page_) {
+        case model::AppPage::Settings:
+            load_screen(std::make_unique<screen::SettingsScreen>(view_model_, assets_));
+            break;
+        case model::AppPage::Test1:
+            load_screen(std::make_unique<screen::PlaceholderScreen>(view_model_, assets_, "Test 1"));
+            break;
+        case model::AppPage::Test2:
+            load_screen(std::make_unique<screen::PlaceholderScreen>(view_model_, assets_, "Test 2"));
+            break;
+        case model::AppPage::LoraError:
+            load_screen(std::make_unique<screen::LoraErrorScreen>(view_model_, assets_));
+            break;
+        case model::AppPage::Home:
+        default:
+            load_screen(std::make_unique<screen::HomeScreen>(view_model_, assets_));
+            break;
+    }
 }
 
 lv_obj_t* ScreenManager::current_screen() const {

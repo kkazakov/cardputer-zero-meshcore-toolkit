@@ -20,8 +20,9 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(USE_DESKTOP ON CACHE BOOL "Build the desktop emulator target with LVGL SDL support")
 set(APP_NAME "${PROJECT_NAME}" CACHE STRING "Application name used for installed asset lookup")
 set(APP_ASSETS_ROOT "" CACHE PATH "Optional runtime assets root. Expected subdirectories include fonts/")
-set(APP_CONFIG_FILE "" CACHE FILEPATH "Application config file; defaults to the repository file on desktop and /etc/template-app.conf on device")
+set(APP_CONFIG_FILE "" CACHE FILEPATH "Application config file; defaults to the repository file on desktop and /etc/meshcore-toolkit.conf on device")
 set(APP_KEY_INPUT_DEVICE "" CACHE STRING "Optional Linux evdev keyboard/keypad device path, e.g. /dev/input/event0")
+set(APP_LORA_SPI_DEVICE "" CACHE STRING "Optional LoRa hat SPI device path, e.g. /dev/spidev0.0; empty auto-detects")
 set(APP_FRAMEBUFFER_DEVICE "/dev/fb0" CACHE STRING "Linux framebuffer device path used by embedded builds")
 set(APP_DRM_DEVICE "/dev/dri/card0" CACHE STRING "Linux DRM device path used when APP_USE_DRM=ON")
 set(APP_DRM_CONNECTOR_ID "-1" CACHE STRING "DRM connector id used when APP_USE_DRM=ON; -1 auto-selects")
@@ -33,9 +34,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile_commands.json" F
 
 if(NOT APP_CONFIG_FILE)
     if(USE_DESKTOP)
-        set(APP_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/config/template-app.conf")
+        set(APP_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/config/meshcore-toolkit.conf")
     else()
-        set(APP_CONFIG_FILE "/etc/template-app.conf")
+        set(APP_CONFIG_FILE "/etc/meshcore-toolkit.conf")
     endif()
 endif()
 
@@ -418,6 +419,7 @@ target_include_directories(${PROJECT_NAME}_platform
 target_compile_definitions(${PROJECT_NAME}_platform
     PUBLIC
         APP_KEY_INPUT_DEVICE="${APP_KEY_INPUT_DEVICE}"
+        APP_LORA_SPI_DEVICE="${APP_LORA_SPI_DEVICE}"
         APP_FRAMEBUFFER_DEVICE="${APP_FRAMEBUFFER_DEVICE}"
         APP_DRM_DEVICE="${APP_DRM_DEVICE}"
         APP_DRM_CONNECTOR_ID=${APP_DRM_CONNECTOR_ID}

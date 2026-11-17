@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 M5Stack Technology CO LTD
+ * SPDX-FileCopyrightText: 2026 Meshcore Toolkit contributors
  *
  * SPDX-License-Identifier: MIT
  */
@@ -8,26 +8,24 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <vector>
+#include <string>
 
 namespace app {
 namespace {
 
 std::string trim(std::string value) {
-    const auto is_not_space = [](unsigned char character) {
-        return !std::isspace(character);
-    };
-
-    value.erase(value.begin(), std::find_if(value.begin(), value.end(), is_not_space));
-    value.erase(std::find_if(value.rbegin(), value.rend(), is_not_space).base(), value.end());
+    const auto not_space = [](unsigned char ch) { return std::isspace(ch) == 0; };
+    value.erase(value.begin(), std::find_if(value.begin(), value.end(), not_space));
+    value.erase(std::find_if(value.rbegin(), value.rend(), not_space).base(), value.end());
     return value;
 }
 
 std::string lowercase(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char character) {
-        return static_cast<char>(std::tolower(character));
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
     });
     return value;
 }
@@ -45,16 +43,48 @@ bool parse_bool(const std::string& value, bool& result) {
     return false;
 }
 
-bool is_section(const std::string& line, const std::string& expected) {
-    const auto normalized = trim(line);
-    return normalized.size() >= 2 && normalized.front() == '[' && normalized.back() == ']' &&
-           lowercase(trim(normalized.substr(1, normalized.size() - 2))) == expected;
+bool parse_int(const std::string& value, int& result) {
+    try {
+        std::size_t used = 0;
+        const auto parsed = std::stol(trim(value), &used);
+        if (used == 0) {
+            return false;
+        }
+        result = static_cast<int>(parsed);
+        return true;
+    } catch (...) {
+        return false;
+    }
 }
 
-bool is_key(const std::string& line, const std::string& expected) {
-    const auto separator = line.find('=');
-    return separator != std::string::npos &&
-           lowercase(trim(line.substr(0, separator))) == expected;
+const char* region_key(model::Region region) {
+    switch (region) {
+        case model::Region::UsCanada:  return "us_canada";
+        case model::Region::Australia: return "australia";
+        case model::Region::NewZealand: return "new_zealand";
+        case model::Region::Eu433:     return "eu433";
+        case model::Region::Custom:    return "custom";
+        case model::Region::Europe:
+        default:                       return "europe";
+    }
+}
+
+bool parse_region(const std::string& value, model::Region& region) {
+    const auto normalized = lowercase(trim(value));
+    if (normalized == "europe") region = model::Region::Europe;
+    else if (normalized == "us_canada" || normalized == "uscanada") region = model::Region::UsCanada;
+    else if (normalized == "australia") region = model::Region::Australia;
+    else if (normalized == "new_zealand" || normalized == "newzealand") region = model::Region::NewZealand;
+    else if (normalized == "eu433" || normalized == "eu_433") region = model::Region::Eu433;
+    else if (normalized == "custom") region = model::Region::Custom;
+    else return false;
+    return true;
+}
+
+void set_node_name(model::MeshConfig& mesh, const std::string& value) {
+    const auto name = trim(value);
+    std::strncpy(mesh.node_name, name.c_str(), model::kNodeNameBuffer - 1);
+    mesh.node_name[model::kNodeNameBuffer - 1] = '\0';
 }
 
 } // namespace
@@ -71,9 +101,7 @@ bool load_application_config(const std::string& path,
 
     std::string section;
     std::string line;
-    std::size_t line_number = 0;
     while (std::getline(input, line)) {
-        ++line_number;
         line = trim(line);
         if (line.empty() || line.front() == '#' || line.front() == ';') {
             continue;
@@ -90,11 +118,42 @@ bool load_application_config(const std::string& path,
         }
 
         const auto key = lowercase(trim(line.substr(0, separator)));
+        const auto value = trim(line.substr(separator + 1));
+
         if (section == "application" && key == "dark_mode") {
-            if (!parse_bool(line.substr(separator + 1), config.dark_mode)) {
-                error = "invalid dark_mode value at line " + std::to_string(line_number);
-                return false;
+            bool parsed = false;
+            if (parse_bool(value, parsed)) {
+                config.dark_mode = parsed;
             }
+            continue;
+        }
+
+        if (section != "mesh") {
+            continue;
+        }
+
+        int parsed = 0;
+        if (key == "node_name") {
+            set_node_name(config.mesh, value);
+        } else if (key == "region") {
+            model::Region region = model::Region::Europe;
+            if (parse_region(value, region)) {
+                apply_region_preset(config.mesh, region);
+            }
+        } else if (key == "freq" && parse_int(value, parsed)) {
+            config.mesh.freq_hz = static_cast<std::uint32_t>(parsed);
+        } else if (key == "sf" && parse_int(value, parsed)) {
+            config.mesh.sf = parsed;
+        } else if (key == "bw_index" && parse_int(value, parsed)) {
+            config.mesh.bw_index = parsed;
+        } else if (key == "cr" && parse_int(value, parsed)) {
+            config.mesh.cr = parsed;
+        } else if (key == "power" && parse_int(value, parsed)) {
+            config.mesh.tx_power_dbm = parsed;
+        } else if (key == "sync" && parse_int(value, parsed)) {
+            config.mesh.sync_word = parsed;
+        } else if (key == "preamble" && parse_int(value, parsed)) {
+            config.mesh.preamble_len = parsed;
         }
     }
 
@@ -117,60 +176,26 @@ bool save_application_config(const std::string& path,
         }
     }
 
-    std::vector<std::string> lines;
-    std::ifstream input(path);
-    std::string line;
-    while (std::getline(input, line)) {
-        lines.push_back(line);
-    }
-
-    std::vector<std::string> updated;
-    bool in_application_section = false;
-    bool found_application_section = false;
-    bool wrote_dark_mode = false;
-    const std::string dark_mode_line = config.dark_mode ? "dark_mode=yes" : "dark_mode=no";
-
-    for (const auto& current_line : lines) {
-        const auto normalized = trim(current_line);
-        const bool section_header = normalized.size() >= 2 && normalized.front() == '[' &&
-                                    normalized.back() == ']';
-        if (section_header) {
-            if (in_application_section && !wrote_dark_mode) {
-                updated.push_back(dark_mode_line);
-                wrote_dark_mode = true;
-            }
-            in_application_section = is_section(current_line, "application");
-            found_application_section = found_application_section || in_application_section;
-        }
-
-        if (in_application_section && is_key(current_line, "dark_mode")) {
-            if (!wrote_dark_mode) {
-                updated.push_back(dark_mode_line);
-                wrote_dark_mode = true;
-            }
-            continue;
-        }
-        updated.push_back(current_line);
-    }
-
-    if (!wrote_dark_mode) {
-        if (!updated.empty() && !updated.back().empty()) {
-            updated.emplace_back();
-        }
-        if (!found_application_section) {
-            updated.emplace_back("[application]");
-        }
-        updated.push_back(dark_mode_line);
-    }
-
     std::ofstream output(path, std::ios::trunc);
     if (!output) {
         error = "could not open file for writing";
         return false;
     }
-    for (const auto& updated_line : updated) {
-        output << updated_line << '\n';
-    }
+
+    output << "[application]\n";
+    output << "dark_mode=" << (config.dark_mode ? "yes" : "no") << "\n\n";
+
+    output << "[mesh]\n";
+    output << "node_name=" << config.mesh.node_name << "\n";
+    output << "region=" << region_key(config.mesh.region) << "\n";
+    output << "freq=" << config.mesh.freq_hz << "\n";
+    output << "sf=" << config.mesh.sf << "\n";
+    output << "bw_index=" << config.mesh.bw_index << "\n";
+    output << "cr=" << config.mesh.cr << "\n";
+    output << "power=" << config.mesh.tx_power_dbm << "\n";
+    output << "sync=" << config.mesh.sync_word << "\n";
+    output << "preamble=" << config.mesh.preamble_len << "\n";
+
     if (!output) {
         error = "failed while writing file";
         return false;

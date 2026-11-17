@@ -21,18 +21,30 @@ struct HelpRow {
     const char* action;
 };
 
-constexpr std::array<HelpRow, 5> kAppleRows = {{
-    {"HOLD ESC / 4", "Exit"},
-    {"5", "Text weight"},
+constexpr std::array<HelpRow, 5> kHomeRows = {{
+    {"Z / C", "Select card"},
+    {"OK", "Open card"},
+    {"ESC", "Exit"},
     {"6", "Light / dark"},
-    {"7", "Version info"},
-    {"8", "Open counter"},
+    {"PRSC", "Screenshot"},
 }};
 
-constexpr std::array<HelpRow, 3> kButterRows = {{
-    {"ESC", "Back to home"},
-    {"Z / LEFT", "Decrease"},
-    {"C / RIGHT", "Increase"},
+constexpr std::array<HelpRow, 5> kSettingsRows = {{
+    {"UP / DN", "Choose field"},
+    {"L / R", "Edit value"},
+    {"OK", "Edit node name"},
+    {"ESC", "Back"},
+    {"6", "Light / dark"},
+}};
+
+constexpr std::array<HelpRow, 2> kBackRows = {{
+    {"ESC", "Back"},
+    {"6", "Light / dark"},
+}};
+
+constexpr std::array<HelpRow, 2> kErrorRows = {{
+    {"OK", "Retry the LoRa check"},
+    {"ESC", "Continue without radio"},
 }};
 
 } // namespace
@@ -156,18 +168,41 @@ bool HelpPopup::visible() const {
 }
 
 void HelpPopup::update_rows(model::AppPage page) {
-    const bool butter = page == model::AppPage::Butter;
-    lv_label_set_text(page_badge_, butter ? "COUNTER" : "HOME");
+    const HelpRow* rows = kHomeRows.data();
+    std::size_t count = kHomeRows.size();
+    const char* badge = "HOME";
+
+    switch (page) {
+        case model::AppPage::Settings:
+            rows = kSettingsRows.data();
+            count = kSettingsRows.size();
+            badge = "SETTINGS";
+            break;
+        case model::AppPage::Test1:
+        case model::AppPage::Test2:
+            rows = kBackRows.data();
+            count = kBackRows.size();
+            badge = "TEST";
+            break;
+        case model::AppPage::LoraError:
+            rows = kErrorRows.data();
+            count = kErrorRows.size();
+            badge = "ERROR";
+            break;
+        case model::AppPage::Home:
+        default:
+            break;
+    }
+
+    lv_label_set_text(page_badge_, badge);
     for (std::size_t i = 0; i < rows_.size(); ++i) {
-        const bool row_visible = butter ? i < kButterRows.size() : i < kAppleRows.size();
-        if (!row_visible) {
+        if (i >= count) {
             lv_obj_add_flag(rows_[i].row, LV_OBJ_FLAG_HIDDEN);
             continue;
         }
         lv_obj_remove_flag(rows_[i].row, LV_OBJ_FLAG_HIDDEN);
-        const auto& row = butter ? kButterRows[i] : kAppleRows[i];
-        lv_label_set_text(rows_[i].key, row.key);
-        lv_label_set_text(rows_[i].action, row.action);
+        lv_label_set_text(rows_[i].key, rows[i].key);
+        lv_label_set_text(rows_[i].action, rows[i].action);
     }
 }
 

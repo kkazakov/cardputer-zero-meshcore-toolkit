@@ -2,6 +2,9 @@
 # Editors / IDEs
 # =========================
 
+# Agent instructions are kept out of the repository on purpose.
+AGENTS.md
+
 # VS Code
 .vscode/
 

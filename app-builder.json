@@ -1,28 +1,28 @@
 {
-  "app_name": "Template",
+  "app_name": "Meshcore Toolkit",
   "package_name": "meshcore-toolkit",
   "version": "0.2.1",
-  "description": "Template Application for CardputerZero",
+  "description": "MeshCore mesh health analyzer for CardputerZero",
 
   "store": {
-    "summary": "TODO: one line about your app (placeholders are auto-rejected)",
-    "description": "TODO: a longer description for the store detail page. Every TODO field in this store section must be replaced before publishing — the store validator rejects unedited template metadata.",
-    "categories": ["TODO: pick 1-2 real categories from docs/APP_BUILDER_JSON.md"],
+    "summary": "Inspect and configure a MeshCore LoRa mesh from your CardputerZero.",
+    "description": "A LoRa mesh health analyzer for the CardputerZero. Configure your MeshCore node name, region and radio parameters (frequency, spreading factor, bandwidth, coding rate, TX power, sync word, preamble), verify the LoRa hat at startup, and analyze the health of nearby MeshCore nodes.\n\nSettings mirror MeshCore's lora namespace, so a node configured on the device stays portable to a MeshCore firmware build. Region presets cover Europe, USA/Canada, Australia, New Zealand and the EU 433 band, and any field can be overridden by hand for a custom frequency plan.",
+    "categories": ["System Tools"],
     "screenshots": [
-      "screenshot/app-simulator-dark-darwin.png",
-      "screenshot/app-simulator-light-darwin.png"
+      "screenshot/app-home.png",
+      "screenshot/app-settings.png"
     ],
     "icon": "assets/images/meshcore-toolkit.png",
-    "license": "TODO: an SPDX id, e.g. MIT",
-    "source_repo": "https://github.com/CardputerZero/Template",
-    "author": { "github": "TODO-your-github-login", "display_name": "TODO: Your Name" },
-    "share_code": "TODO",
+    "license": "MIT",
+    "source_repo": "https://github.com/kkazakov/cardputer-zero-meshcore-toolkit.git",
+    "author": { "github": "kkazakov", "display_name": "Krasimir Kazakov" },
+    "share_code": "MSHK",
     "permissions": {
       "camera": false,
       "microphone": false,
       "imu": false,
       "network": false,
-      "additional_hardware": false,
+      "additional_hardware": true,
       "background_service": false,
       "external_display": false
     }
