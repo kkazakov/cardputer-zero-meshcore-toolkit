@@ -387,7 +387,7 @@ void DesktopSimulatorFrame::handle_event(const SDL_Event& event, bool& running) 
                 std::copy_n(reinterpret_cast<const uint8_t*>(cursor),
                             std::min<uint32_t>(length, sizeof(key)),
                             reinterpret_cast<uint8_t*>(&key));
-                if (keypad_ && key != '4') {
+                if (keypad_ && (key != '4' || platform::text_input_mode())) {
                     keypad_->emit_key(key);
                 }
                 cursor += length;

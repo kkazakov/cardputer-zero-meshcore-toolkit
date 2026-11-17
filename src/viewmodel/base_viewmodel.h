@@ -73,6 +73,7 @@ public:
     void cancel_node_edit();
     void move_node_cursor(int delta);
     void cycle_node_char(int delta);
+    void insert_node_char(char character);
     void backspace_node_char();
 
     void set_mesh_config(const model::MeshConfig& config);

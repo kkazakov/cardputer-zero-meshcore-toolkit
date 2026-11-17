@@ -22,7 +22,7 @@ struct HelpRow {
 };
 
 constexpr std::array<HelpRow, 5> kHomeRows = {{
-    {"Z / C", "Select card"},
+    {"LEFT / RIGHT", "Select card (Z / C too)"},
     {"OK", "Open card"},
     {"ESC", "Exit"},
     {"6", "Light / dark"},
@@ -30,9 +30,9 @@ constexpr std::array<HelpRow, 5> kHomeRows = {{
 }};
 
 constexpr std::array<HelpRow, 5> kSettingsRows = {{
-    {"F / X", "Choose field (no FN needed)"},
+    {"UP / DN", "Choose field (F / X too)"},
     {"OK", "Edit the focused field"},
-    {"Z / C", "Change the value while editing"},
+    {"LEFT / RIGHT", "Change value (Z / C too)"},
     {"OK / ESC", "Save / cancel the edit"},
     {"ESC", "Back when not editing"},
 }};

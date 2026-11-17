@@ -22,13 +22,16 @@ struct HintSpec {
     const char* action;
 };
 
-std::array<HintSpec, 3> hints_for(model::AppPage page, bool editing) {
+std::array<HintSpec, 3> hints_for(model::AppPage page, bool editing, bool editing_name) {
     switch (page) {
         case model::AppPage::Settings:
-            if (editing) {
-                return {{{"Z/C", "Change"}, {"OK", "Save"}, {"ESC", "Cancel"}}};
+            if (editing_name) {
+                return {{{"Type", "Name"}, {"OK", "Save"}, {"ESC", "Cancel"}}};
             }
-            return {{{"F/X", "Field"}, {"OK", "Edit"}, {"ESC", "Back"}}};
+            if (editing) {
+                return {{{"L/R", "Change"}, {"OK", "Save"}, {"ESC", "Cancel"}}};
+            }
+            return {{{"Up/Dn", "Field"}, {"OK", "Edit"}, {"ESC", "Back"}}};
         case model::AppPage::Test1:
         case model::AppPage::Test2:
             return {{{"", ""}, {"ESC", "Back"}, {"", ""}}};
@@ -36,7 +39,7 @@ std::array<HintSpec, 3> hints_for(model::AppPage page, bool editing) {
             return {{{"OK", "Retry"}, {"", ""}, {"ESC", "Continue"}}};
         case model::AppPage::Home:
         default:
-            return {{{"Z/C", "Select"}, {"OK", "Open"}, {"ESC", "Exit"}}};
+            return {{{"L/R", "Select"}, {"OK", "Open"}, {"ESC", "Exit"}}};
     }
 }
 
@@ -124,10 +127,10 @@ void NavBar::build() {
 }
 
 void NavBar::update_hints() {
+    const bool editing_name = lv_subject_get_int(view_model_.node_edit_active_subject()) != 0;
     const bool editing =
-        lv_subject_get_int(view_model_.settings_edit_active_subject()) != 0 ||
-        lv_subject_get_int(view_model_.node_edit_active_subject()) != 0;
-    const auto hints = hints_for(view_model_.current_page(), editing);
+        lv_subject_get_int(view_model_.settings_edit_active_subject()) != 0 || editing_name;
+    const auto hints = hints_for(view_model_.current_page(), editing, editing_name);
     const auto palette = view::palette(view_model_.is_dark_mode());
     for (int i = 0; i < 3; ++i) {
         lv_label_set_text(hint_keys_[i], hints[i].key);

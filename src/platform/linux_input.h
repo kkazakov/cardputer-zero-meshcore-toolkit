@@ -21,6 +21,10 @@ using GlobalKeyListener = bool (*)(uint32_t key,
 void init_key_input(lv_display_t* display);
 void attach_key_router(lv_indev_t* indev);
 void set_nav_shortcut_mode(bool enabled);
+// While enabled, letter keys are delivered as typed characters instead of
+// being folded into arrows, and nav-button shortcuts are dispatched to the UI.
+void set_text_input_mode(bool enabled);
+bool text_input_mode();
 void register_nav_button(size_t index, lv_obj_t* button);
 void unregister_nav_button(size_t index, lv_obj_t* button);
 void set_key_release_listener(KeyReleaseListener listener, void* user_data);

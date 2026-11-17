@@ -272,6 +272,30 @@ void BaseViewModel::cycle_node_char(int delta) {
     publish_mesh();
 }
 
+void BaseViewModel::insert_node_char(char character) {
+    if (character == '\0' || std::strchr(kNodeCharset, character) == nullptr) {
+        return; // only characters the config format accepts
+    }
+
+    auto& mesh = model_.mutable_mesh_config();
+    const int len = static_cast<int>(std::strlen(mesh.node_name));
+    if (len >= model::kMaxNodeName) {
+        return;
+    }
+
+    int cursor = model_.node_edit_cursor();
+    if (cursor > len) {
+        cursor = len;
+    }
+
+    for (int i = len; i >= cursor; --i) {
+        mesh.node_name[i + 1] = mesh.node_name[i];
+    }
+    mesh.node_name[cursor] = character;
+    model_.set_node_edit_cursor(cursor + 1);
+    publish_mesh();
+}
+
 void BaseViewModel::backspace_node_char() {
     auto& mesh = model_.mutable_mesh_config();
     const int len = static_cast<int>(std::strlen(mesh.node_name));

@@ -8,9 +8,9 @@ The main screen is a sliding card carousel — Settings, Test 1, Test 2 — port
 from the [CardputerZero mouse emulator](https://github.com/CardputerZero/cardputer-zero-mouse-emu)
 layout, so the two apps look like siblings on the device.
 
-| Main menu | Settings | Editing a value |
-| --- | --- | --- |
-| ![Main menu](screenshot/app-home.png) | ![Settings](screenshot/app-settings.png) | ![Editing](screenshot/app-settings-edit.png) |
+| Main menu | Settings | Editing a value | Typing the node name |
+| --- | --- | --- | --- |
+| ![Main menu](screenshot/app-home.png) | ![Settings](screenshot/app-settings.png) | ![Editing](screenshot/app-settings-edit.png) | ![Name editor](screenshot/app-name-edit.png) |
 
 *Captured on the device with the app's own screenshot key (320×170).*
 *The app starts in the dark palette shared with Mouse Jiggler; `6` switches to light.*
@@ -23,8 +23,11 @@ layout, so the two apps look like siblings on the device.
   `6` toggles a light theme.
 - **Settings** — configure every primary MeshCore radio option:
   node name, region (with presets), frequency, spreading factor, bandwidth,
-  coding rate, TX power, sync word, and preamble. F/X pick a field, OK opens it,
-  Z/C change the value, OK saves and ESC cancels.
+  coding rate, TX power, sync word, and preamble. Up/Down pick a field, OK opens
+  it, Left/Right change the value, OK saves and ESC cancels.
+- **Typing** — the node name is entered directly on the CardputerZero keyboard;
+  the same letters act as arrows everywhere else, and the app switches behaviour
+  per mode so `Z`/`C`/`F`/`X` type normally while the editor is open.
 - **Regions** — Europe, USA/Canada, Australia, New Zealand, EU 433, and a Custom
   mode for manual frequency plans.
 - **LoRa hat check** — powers the hat's EXT 5V rail, probes the SX1262 on the SPI
@@ -45,9 +48,10 @@ plain letters instead — no `FN` chord is ever needed.
 
 | Key | Action |
 | --- | --- |
-| `Z` / `C` (or `←` / `→`) | move the carousel selection / change a value while editing |
-| `F` / `X` (or `↑` / `↓`) | choose a settings field / cycle a name character |
+| `←` / `→` (or `Z` / `C`) | move the carousel selection / change a value while editing |
+| `↑` / `↓` (or `F` / `X`) | choose a settings field / cycle a name character |
 | `OK` / `Enter` | open the selected card, start editing the focused field, then save |
+| any letter / digit / space / `-` `.` | type into the node name while it is being edited |
 | `ESC` | cancel an edit, go back, or exit from the main screen |
 | `6` | light / dark theme |
 | `PRSC` | save a screenshot |
@@ -158,8 +162,7 @@ config at `/etc/meshcore-toolkit.conf`.
 
 ## Credits
 
-- UI carousel language and layout metrics: [Ultimate-Remote](https://github.com/geo-tp/Ultimate-Remote) (MIT)
-- Main-screen layout: [cardputer-zero-mouse-emu](https://github.com/CardputerZero/cardputer-zero-mouse-jiggler)
+- UI carousel language and layout metrics, main-screen layout: [Ultimate-Remote](https://github.com/geo-tp/Ultimate-Remote) (MIT)
 - Radio configuration model: [MeshCore](https://github.com/meshcore-dev/MeshCore) (MIT)
 - LoRa hat: [M5Stack Cap LoRa-1262](https://docs.m5stack.com/en/cap/Cap_LoRa-1262)
 

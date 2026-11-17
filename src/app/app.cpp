@@ -129,6 +129,7 @@ public:
         toast_->build();
         help_popup_->build();
         platform::set_global_key_listener(global_key_listener, this);
+        sync_text_mode();
     }
 
     ~InputController() {
@@ -136,6 +137,15 @@ public:
     }
 
 private:
+    static bool is_printable(uint32_t key) {
+        return key >= 32 && key < 127;
+    }
+
+    void sync_text_mode() {
+        platform::set_text_input_mode(
+            lv_subject_get_int(view_model_.node_edit_active_subject()) != 0);
+    }
+
     static bool is_left(uint32_t key) {
         return key == 'z' || key == 'Z' || key == LV_KEY_LEFT;
     }
@@ -234,10 +244,12 @@ private:
         if (editing_name) {
             if (key == LV_KEY_ENTER) {
                 view_model_.toggle_node_edit(); // commit
+                sync_text_mode();
                 return true;
             }
             if (key == LV_KEY_ESC) {
                 view_model_.cancel_node_edit();
+                sync_text_mode();
                 return true;
             }
             if (key == LV_KEY_LEFT) {
@@ -258,6 +270,10 @@ private:
             }
             if (key == LV_KEY_BACKSPACE) {
                 view_model_.backspace_node_char();
+                return true;
+            }
+            if (is_printable(key)) {
+                view_model_.insert_node_char(static_cast<char>(key));
                 return true;
             }
             return false;
@@ -300,6 +316,7 @@ private:
             if (lv_subject_get_int(view_model_.settings_focus_subject()) ==
                 static_cast<int>(model::SettingsField::NodeName)) {
                 view_model_.toggle_node_edit();
+                sync_text_mode();
             } else {
                 view_model_.begin_settings_edit();
             }
